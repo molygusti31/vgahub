@@ -1,0 +1,793 @@
+<!-- @format -->
+
+<!doctype html>
+<html lang="id">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+		<title>Dashboard Timbangan - Weighing Scale Monitor</title>
+		<link
+			rel="icon"
+			href="vgahub.ico"
+			type="image/x-icon" />
+		<link
+			rel="stylesheet"
+			href="style.css" />
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.12.1/dist/JsBarcode.all.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+	</head>
+
+	<body>
+		<div class="container">
+			<!-- Navbar -->
+			<nav class="navbar">
+				<div class="navbar-brand">
+					<img
+						src="Asset-1.png"
+						alt="company logo"
+						class="navbar-logo" />
+				</div>
+				<ul class="navbar-menu">
+					<li>
+						<a
+							href="#"
+							class="nav-link active"
+							data-menu="summary"
+							>Ringkasan</a
+						>
+					</li>
+					<li>
+						<a
+							href="#"
+							class="nav-link"
+							data-menu="jenisLimbah"
+							>Jenis Limbah</a
+						>
+					</li>
+					<li>
+						<a
+							href="#"
+							class="nav-link"
+							data-menu="sumberLimbah"
+							>Sumber Limbah</a
+						>
+					</li>
+					<li>
+						<a
+							href="#"
+							class="nav-link"
+							data-menu="history"
+							>Riwayat</a
+						>
+					</li>
+					<li>
+						<a
+							href="#"
+							class="nav-link"
+							data-menu="manage"
+							>Master Data</a
+						>
+					</li>
+				</ul>
+			</nav>
+
+			<!-- Main Content -->
+			<main class="main-content">
+
+				<!-- SUMMARY MENU -->
+				<section
+					id="summary"
+					class="menu-section active">
+					<div class="header-section">
+						<h2>Ringkasan Data</h2>
+
+						<!-- Filter Tanggal -->
+						<div class="filter-container">
+							<label>Tanggal Mulai:</label>
+							<input
+								type="date"
+								id="startDate"
+								class="date-input" />
+
+							<label>Tanggal Akhir:</label>
+							<input
+								type="date"
+								id="endDate"
+								class="date-input" />
+
+							<label for="summaryPeriod">Tampilan Grafik:</label>
+							<select
+								id="summaryPeriod"
+								class="select-input">
+								<option value="day">Harian</option>
+								<option value="week">Mingguan</option>
+								<option value="month">Bulanan</option>
+								<option value="year">Tahunan</option>
+							</select>
+
+							<button
+								class="btn btn-primary"
+								id="filterBtn">
+								Filter
+							</button>
+							<!-- <button class="btn btn-secondary" id="exportBtn">Export Excel</button> -->
+						</div>
+					</div>
+
+					<!-- Statistics Cards -->
+					<div class="stats-container">
+						<div class="stat-card">
+							<h3>TOTAL PENIMBANGAN</h3>
+							<p
+								class="stat-value"
+								id="totalWeighing">
+								0
+							</p>
+						</div>
+						<div class="stat-card">
+							<h3>TOTAL SUMBER LIMBAH</h3>
+							<p
+								class="stat-value"
+								id="sumberLimbahCount">
+								0
+							</p>
+						</div>
+						<div class="stat-card">
+							<h3>TOTAL JENIS LIMBAH</h3>
+							<p
+								class="stat-value"
+								id="jenisLimbahCount">
+								0
+							</p>
+						</div>
+						<div class="stat-card">
+							<h3>TOTAL BERAT</h3>
+							<p
+								class="stat-value"
+								id="totalWeight">
+								0
+							</p>
+						</div>
+						<div class="stat-card">
+							<h3>RATA-RATA BERAT</h3>
+							<p
+								class="stat-value"
+								id="avgWeight">
+								0
+							</p>
+						</div>
+					</div>
+
+					<!-- <div class="section-title">Analisis Per Jenis Limbah</div> -->
+					<div class="charts-container charts-container-single">
+						<div class="chart-wrapper">
+							<h3>Total Berat per Jenis Limbah</h3>
+							<canvas id="jenisLimbahBarChart"></canvas>
+						</div>
+					</div>
+					<!-- <div class="section-title">Analisis Per Sumber Limbah</div> -->
+					<div class="charts-container charts-container-single">
+						<div class="chart-wrapper">
+							<h3>Total Berat per Sumber Limbah</h3>
+							<canvas id="sumberLimbahBarChart"></canvas>
+						</div>
+					</div>
+
+					<div class="charts-container charts-container-single">
+						<div class="chart-wrapper">
+							<h3>Total Berat per Kategori Limbah</h3>
+							<canvas id="categoryTrendChart"></canvas>
+						</div>
+					</div>
+
+					<section class="summary-waste-details">
+						<div class="summary-waste-details-heading">
+							<h3>Rincian Jenis Limbah per Kategori</h3>
+							<p>Berat ditampilkan berdasarkan rentang tanggal dan periode yang dipilih.</p>
+						</div>
+						<div
+							id="summaryWasteDetails"
+							class="summary-waste-details-grid"></div>
+					</section>
+				</section>
+
+				<!-- JENIS LIMBAH MENU -->
+				<section
+					id="jenisLimbah"
+					class="menu-section">
+					<div class="header-section">
+						<h2 id="jenisLimbahTitle">Daftar Jenis Limbah</h2>
+					</div>
+
+					<div
+						id="jenisLimbahSummaryCharts"
+						class="charts-container">
+						<div class="chart-wrapper">
+							<h3>Jumlah Penimbangan per Jenis Limbah</h3>
+							<canvas id="jenisLimbahDoughnutChart"></canvas>
+						</div>
+						<div class="chart-wrapper">
+							<h3>Persentase Total Berat per Jenis Limbah</h3>
+							<canvas id="jenisLimbahWeightDoughnutChart"></canvas>
+						</div>
+					</div>
+
+					<div
+						class="cards-container"
+						id="jenisLimbahContainer"></div>
+
+					<div
+						id="jenisLimbahDetailsSection"
+						class="sumberLimbah-details-section"
+						style="display: none">
+						<div class="detail-filter">
+							<label>Tanggal Mulai:</label>
+							<input
+								type="date"
+								id="jenisLimbahStartDate"
+								class="date-input" />
+
+							<label>Tanggal Akhir:</label>
+							<input
+								type="date"
+								id="jenisLimbahEndDate"
+								class="date-input" />
+
+							<button
+								class="btn btn-primary"
+								id="jenisLimbahFilterBtn">
+								Filter
+							</button>
+							<!-- <button class="btn btn-secondary" id="jenisLimbahExportBtn">Export Excel</button> -->
+						</div>
+
+						<div class="stats-container sumberLimbah-stats">
+							<div class="stat-card">
+								<h3>TOTAL PENIMBANGAN</h3>
+								<p
+									class="stat-value"
+									id="jenisLimbahTotal">
+									0
+								</p>
+							</div>
+							<div class="stat-card">
+								<h3>TOTAL BERAT</h3>
+								<p
+									class="stat-value"
+									id="jenisLimbahTotalWeight">
+									0
+								</p>
+							</div>
+							<div class="stat-card">
+								<h3>RATA-RATA BERAT</h3>
+								<p
+									class="stat-value"
+									id="jenisLimbahAvgWeight">
+									0
+								</p>
+							</div>
+							<div class="stat-card">
+								<h3>JUMLAH SUMBER LIMBAH</h3>
+								<p
+									class="stat-value"
+									id="jenisLimbahSumberLimbahCount">
+									0
+								</p>
+							</div>
+						</div>
+
+						<!-- <div class="jenisLimbah-charts-stack"> -->
+						<div class="charts-container charts-container-single">
+							<div class="chart-wrapper">
+								<h3>Satuan Data Penimbangan</h3>
+								<canvas id="jenisLimbahWeightLineChart"></canvas>
+							</div>
+						</div>
+
+						<div class="charts-container">
+							<div class="chart-wrapper">
+								<h3>Total Berat per Sumber Limbah</h3>
+								<canvas id="jenisLimbahSumberLimbahWeightChart"></canvas>
+							</div>
+							<div class="chart-wrapper">
+								<h3>Total Penimbangan per Sumber Limbah</h3>
+								<canvas id="jenisLimbahSumberLimbahChart"></canvas>
+							</div>
+						</div>
+						<!-- </div> -->
+					</div>
+				</section>
+
+				<!-- SUMBER LIMBAH MENU -->
+				<section
+					id="sumberLimbah"
+					class="menu-section">
+					<div class="header-section">
+						<h2 id="sumberLimbahTitle">Daftar Sumber Limbah</h2>
+					</div>
+
+					<div
+						id="sumberLimbahSummaryCharts"
+						class="charts-container">
+						<div class="chart-wrapper">
+							<h3>Jumlah Penimbangan per Sumber Limbah</h3>
+							<canvas id="sumberLimbahDoughnutChart"></canvas>
+						</div>
+						<div class="chart-wrapper">
+							<h3>Persentase Total Berat per Sumber Limbah</h3>
+							<canvas id="sumberLimbahWeightDoughnutChart"></canvas>
+						</div>
+					</div>
+
+					<div
+						class="cards-container"
+						id="sumberLimbahContainer"></div>
+
+					<div
+						id="sumberLimbahDetailsSection"
+						class="sumberLimbah-details-section"
+						style="display: none">
+						<div class="detail-filter">
+							<label>Tanggal Mulai:</label>
+							<input
+								type="date"
+								id="sumberLimbahStartDate"
+								class="date-input" />
+
+							<label>Tanggal Akhir:</label>
+							<input
+								type="date"
+								id="sumberLimbahEndDate"
+								class="date-input" />
+
+							<button
+								class="btn btn-primary"
+								id="sumberLimbahFilterBtn">
+								Filter
+							</button>
+							<!-- <button class="btn btn-secondary" id="sumberLimbahExportBtn">Export Excel</button> -->
+						</div>
+
+						<div class="stats-container detail-stats">
+							<div class="stat-card">
+								<h3>TOTAL PENIMBANGAN</h3>
+								<p
+									class="stat-value"
+									id="sumberLimbahTotal">
+									0
+								</p>
+							</div>
+							<div class="stat-card">
+								<h3>TOTAL BERAT</h3>
+								<p
+									class="stat-value"
+									id="sumberLimbahTotalWeight">
+									0
+								</p>
+							</div>
+							<div class="stat-card">
+								<h3>RATA-RATA BERAT</h3>
+								<p
+									class="stat-value"
+									id="sumberLimbahAvgWeight">
+									0
+								</p>
+							</div>
+							<div class="stat-card">
+								<h3>MAX BERAT</h3>
+								<p
+									class="stat-value"
+									id="sumberLimbahMaxWeight">
+									0
+								</p>
+							</div>
+						</div>
+
+						<div class="charts-container charts-container-single">
+							<div class="chart-wrapper">
+								<h3>Satuan Data Penimbangan</h3>
+								<canvas id="streamingLineChart"></canvas>
+							</div>
+						</div>
+
+						<div class="charts-container">
+							<div class="chart-wrapper">
+								<h3>Total Berat per Jenis Limbah</h3>
+								<canvas id="sumberLimbahDetailBarChart"></canvas>
+							</div>
+							<div class="chart-wrapper">
+								<h3>Total Penimbangan per Jenis Limbah</h3>
+								<canvas id="detailSumberLimbahDoughnutChart"></canvas>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- HISTORY MENU -->
+				<section
+					id="history"
+					class="menu-section">
+					<div class="header-section">
+						<h2>Riwayat Penimbangan</h2>
+						<div class="filter-container">
+							<!-- <label>No Sumber Limbah:</label> -->
+							<select
+								id="historySumberLimbahFilter"
+								class="select-input">
+								<option value="">Semua Sumber Limbah</option>
+							</select>
+							<select
+								id="historyJenisLimbahFilter"
+								class="select-input">
+								<option value="">Semua Jenis Limbah</option>
+							</select>
+							<select
+								id="historyKategoriFilter"
+								class="select-input">
+								<option value="">Semua Kategori</option>
+							</select>
+
+							<label>Tanggal:</label>
+							<input
+								type="date"
+								id="historyStartDate"
+								class="date-input" />
+
+							<label>-</label>
+							<input
+								type="date"
+								id="historyEndDate"
+								class="date-input" />
+
+							<button
+								class="btn btn-primary"
+								id="historyFilterBtn">
+								Filter
+							</button>
+							<button
+								class="btn btn-secondary"
+								id="historyExportBtn">
+								Export Excel
+							</button>
+						</div>
+					</div>
+
+					<div class="table-responsive">
+						<table class="data-table">
+							<thead>
+								<tr>
+									<th onclick="sortTable('id_transaksi')">ID Transaksi ⇵</th>
+									<!-- <th onclick="sortTable('id_timbangan')">Timbangan ⇵</th> -->
+									<th onclick="sortTable('sumber_limbah')">Sumber Limbah ⇵</th>
+									<th onclick="sortTable('jenis_limbah')">Jenis Limbah ⇵</th>
+									<th onclick="sortTable('kategori_limbah')">Kategori ⇵</th>
+									<th onclick="sortTable('operator')">Operator ⇵</th>
+									<th onclick="sortTable('divisi')">Departemen/Section ⇵</th>
+									<th onclick="sortTable('berat')">Berat ⇵</th>
+									<th onclick="sortTable('date')">Tanggal ⇵</th>
+									<th onclick="sortTable('time')">Waktu ⇵</th>
+								</tr>
+							</thead>
+							<tbody id="historyTableBody">
+								<!-- Data akan di-generate oleh JavaScript -->
+							</tbody>
+						</table>
+					</div>
+					<div
+						class="table-footer"
+						aria-label="Navigasi halaman history">
+						<span
+							id="historyPageInfo"
+							class="table-page-info"
+							>Halaman 1 dari 1</span
+						>
+						<div class="table-pagination">
+							<button
+								class="btn btn-secondary"
+								id="historyPreviousBtn"
+								type="button">
+								Sebelumnya
+							</button>
+							<button
+								class="btn btn-primary"
+								id="historyNextBtn"
+								type="button">
+								Berikutnya
+							</button>
+						</div>
+					</div>
+				</section>
+
+				<!-- MANAGE MENU -->
+				<section
+					id="manage"
+					class="menu-section">
+					<div class="header-section manage-header">
+						<h2>Manage Database</h2>
+					</div>
+
+					<div
+						id="manageLogin"
+						class="manage-login">
+						<h3>Akses Manage</h3>
+						<p>Masukkan password untuk mengakses pengelolaan database.</p>
+						<form
+							id="manageLoginForm"
+							class="manage-login-form">
+							<input
+								id="managePassword"
+								class="text-input"
+								type="password"
+								placeholder="Password"
+								autocomplete="current-password"
+								required />
+							<button
+								type="submit"
+								class="btn btn-primary">
+								Masuk
+							</button>
+						</form>
+						<p
+							id="manageLoginMessage"
+							class="manage-login-message"
+							role="alert"
+							hidden></p>
+					</div>
+
+					<div
+						id="manageContent"
+						hidden>
+						<div class="manage-toolbar">
+							<p class="manage-description">Kelola data master yang digunakan pada transaksi penimbangan.</p>
+							<button
+								id="manageLogoutBtn"
+								class="btn btn-secondary"
+								type="button">
+								Keluar
+							</button>
+						</div>
+						<div
+							class="manage-tabs"
+							role="tablist"
+							aria-label="Pengaturan database">
+							<button
+								type="button"
+								class="manage-tab active"
+								data-master-tab="operator">
+								Operator
+							</button>
+							<button
+								type="button"
+								class="manage-tab"
+								data-master-tab="limbah">
+								Nama Limbah
+							</button>
+							<button
+								type="button"
+								class="manage-tab"
+								data-master-tab="sumber">
+								Sumber Limbah
+							</button>
+							<button
+								type="button"
+								class="manage-tab"
+								data-master-tab="divisi">
+								Departemen/Section
+							</button>
+							<button
+								type="button"
+								class="manage-tab"
+								data-master-tab="weighing">
+								Riwayat Penimbangan
+							</button>
+						</div>
+
+						<!-- Operator Master Panel -->
+						<section
+							class="master-panel active"
+							data-master-panel="operator">
+							<form
+								id="operatorForm"
+								class="master-form">
+								<input
+									id="operatorName"
+									class="text-input"
+									placeholder="Nama operator"
+									required />
+								<input
+									id="operatorNik"
+									class="text-input"
+									placeholder="NIK"
+									required />
+								<select
+									id="operatorDivision"
+									class="select-input"
+									required>
+									<option value="">Pilih Departemen/Section</option>
+								</select>
+								<button
+									type="submit"
+									class="btn btn-primary">
+									Tambah Operator
+								</button>
+							</form>
+							<div class="table-responsive manage-table-responsive">
+								<table class="data-table manage-table">
+									<thead>
+										<tr>
+											<th>Nama Operator</th>
+											<th>NIK</th>
+											<th>Departemen/Section</th>
+											<th>Aksi</th>
+										</tr>
+									</thead>
+									<tbody id="operatorMasterBody"></tbody>
+								</table>
+							</div>
+						</section>
+
+						<!-- Limbah Master Panel -->
+						<section
+							class="master-panel"
+							data-master-panel="limbah">
+							<form
+								id="wasteForm"
+								class="master-form">
+								<input
+									id="wasteCode"
+									class="text-input"
+									placeholder="Kode limbah"
+									required />
+								<input
+									id="wasteCategory"
+									class="text-input"
+									placeholder="Kategori limbah"
+									required />
+								<input
+									id="wasteName"
+									class="text-input"
+									placeholder="Nama / jenis limbah"
+									required />
+								<button
+									type="submit"
+									class="btn btn-primary">
+									Tambah Limbah
+								</button>
+							</form>
+							<div class="table-responsive manage-table-responsive">
+								<table class="data-table manage-table">
+									<thead>
+										<tr>
+											<th>Kode Limbah</th>
+											<th>Kategori</th>
+											<th>Nama Limbah</th>
+											<th>Aksi</th>
+										</tr>
+									</thead>
+									<tbody id="wasteMasterBody"></tbody>
+								</table>
+							</div>
+						</section>
+
+						<!-- Sumber Master Panel -->
+						<section
+							class="master-panel"
+							data-master-panel="sumber">
+							<form
+								id="sourceForm"
+								class="master-form">
+								<input
+									id="sourceId"
+									class="text-input"
+									placeholder="Kode sumber"
+									required />
+								<input
+									id="sourceName"
+									class="text-input"
+									placeholder="Nama sumber limbah"
+									required />
+								<button
+									type="submit"
+									class="btn btn-primary">
+									Tambah Sumber
+								</button>
+							</form>
+							<div class="table-responsive manage-table-responsive">
+								<table class="data-table manage-table">
+									<thead>
+										<tr>
+											<th>Kode Sumber</th>
+											<th>Sumber Limbah</th>
+											<th>Aksi</th>
+										</tr>
+									</thead>
+									<tbody id="sourceMasterBody"></tbody>
+								</table>
+							</div>
+						</section>
+
+						<!-- Divisi Master Panel -->
+						<section
+							class="master-panel"
+							data-master-panel="divisi">
+							<form
+								id="divisionForm"
+								class="master-form">
+								<input
+									id="divisionName"
+									class="text-input"
+									placeholder="Nama Departemen/Section"
+									required />
+								<button
+									type="submit"
+									class="btn btn-primary">
+									Tambah Departemen/Section
+								</button>
+							</form>
+							<div class="table-responsive manage-table-responsive">
+								<table class="data-table manage-table">
+									<thead>
+										<tr>
+											<th>Departemen/Section</th>
+											<th>Aksi</th>
+										</tr>
+									</thead>
+									<tbody id="divisionMasterBody"></tbody>
+								</table>
+							</div>
+						</section>
+
+						<!-- Weighing Master Panel -->
+						<section
+							class="master-panel"
+							data-master-panel="weighing">
+							<div class="manage-weighing-toolbar">
+								<p class="manage-description">Pilih data penimbangan yang akan dihapus. Penghapusan tidak dapat dibatalkan.</p>
+								<button
+									id="deleteSelectedWeighingBtn"
+									class="btn btn-danger"
+									type="button"
+									disabled>
+									Hapus Dipilih (0)
+								</button>
+							</div>
+							<div class="table-responsive manage-table-responsive">
+								<table class="data-table manage-table">
+									<thead>
+										<tr>
+											<th class="checkbox-column">
+												<input
+													id="weighingSelectAll"
+													type="checkbox"
+													aria-label="Pilih semua data penimbangan" />
+											</th>
+											<!-- <th>ID Log</th> -->
+											<th>ID Transaksi</th>
+											<!-- <th>Timbangan</th> -->
+											<th>Sumber Limbah</th>
+											<th>Jenis Limbah</th>
+											<th>Kategori</th>
+											<th>Operator</th>
+											<th>Departemen/Section</th>
+											<th>Berat (gr)</th>
+											<th>Tanggal</th>
+											<th>Waktu</th>
+											<!-- <th>Created At</th> -->
+										</tr>
+									</thead>
+									<tbody id="weighingManageBody"></tbody>
+								</table>
+							</div>
+						</section>
+					</div>
+				</section>
+			</main>
+		</div>
+
+		<script src="script.js"></script>
+	</body>
+</html>
