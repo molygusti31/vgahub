@@ -1,0 +1,57 @@
+{
+  "name": "weighing-scale-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard untuk logging dan monitoring timbangan",
+  "main": "server_marugo.js",
+  "bin": "server_marugo.js",
+  "scripts": {
+    "start": "node server_marugo.js",
+    "simulate": "node simulator.js",
+    "import:materials": "node import-materials.js",
+    "dev": "npm start",
+    "build:exe": "pkg . --targets node24.18.1-win-x64 --output dist/Dashboard.exe",
+    "build:linux": "bash build-linux.sh"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "weighing",
+    "scale",
+    "dashboard"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vscode/codicons": "^0.0.46-24",
+    "better-sqlite3": "^12.11.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^1.4.4",
+    "npm": "^12.2.1",
+    "sqlite3": "^5.1.6",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.5.1"
+  },
+  "pkg": {
+    "scripts": [
+      "dashboard-launcher.js",
+      "manager.js",
+      "server_marugo.js",
+      "database_marugo.js",
+      "license.js",
+      "node_modules/sqlite3/**/*.js"
+    ],
+    "assets": [
+      "public/**/*",
+      "node_modules/better-sqlite3/build/Release/*.node"
+    ],
+    "outputPath": "dist"
+  }
+}

@@ -1,0 +1,13 @@
+summary : tidak auto reload ✅
+summary : data yg dimuat by choice atau langsung filter?
+summary : tambahkan total berat pada bar chart ❌
+mesin list : tambahkan total material, total berat, rata rata berat
+mesin detail : jika ada material baru, tidak tampil
+mesin detail : card tidak auto reload
+mesin detail : card & filter pindahkan ke atas
+mesin detail : ganti line chart dengan bar chart
+material list : update terakhir tidak aktif
+material detail : tick sumbu x tidak ada
+material detail : bar chart belum ada
+material detail : legend pada grafik donat
+all : perbaiki format weight pada card ✅
