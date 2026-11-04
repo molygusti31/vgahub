@@ -9,6 +9,12 @@ const PORT_FILE = path.join(APP_DIR, "port.conf");
 const PID_FILE = path.join(APP_DIR, "manager.pid");
 const MANAGER_PORT_FILE = path.join(APP_DIR, "manager.port");
 const LOG_FILE = path.join(APP_DIR, "server.log");
+const CONTROL_CENTER_FILES = new Map([
+  ["/control-center/", ["index.html", "text/html; charset=utf-8"]],
+  ["/control-center/index.html", ["index.html", "text/html; charset=utf-8"]],
+  ["/control-center/style.css", ["style.css", "text/css; charset=utf-8"]],
+  ["/control-center/app.js", ["app.js", "text/javascript; charset=utf-8"]],
+]);
 
 let configuredPort = Number(process.env.PORT || 3000);
 let serverProcess = null;
@@ -150,6 +156,26 @@ function stopServer() {
 
 async function handleRequest(request, response) {
   const requestUrl = new URL(request.url, `http://${request.headers.host}`);
+
+  const controlCenterFile = CONTROL_CENTER_FILES.get(requestUrl.pathname);
+  if (request.method === "GET" && controlCenterFile) {
+    try {
+      const contents = fs.readFileSync(
+        path.join(APP_DIR, "control-center", controlCenterFile[0]),
+      );
+      response.writeHead(200, {
+        "Content-Type": controlCenterFile[1],
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      return response.end(contents);
+    } catch (error) {
+      if (error.code !== "ENOENT") {
+        throw error;
+      }
+      return sendJSON(response, 404, { error: "File Control Center tidak ditemukan." });
+    }
+  }
 
   if (request.method === "GET" && requestUrl.pathname === "/api/state") {
     syncPortFile();

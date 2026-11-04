@@ -61,13 +61,17 @@ Server akan berjalan di `http://localhost:3000`
 ### 6. Buat Aplikasi Windows (.exe)
 
 Klik dua kali `build-exe.bat`. Setelah selesai, aplikasi tersedia sebagai
-`dist\Dashboard.exe`; folder `public` sudah dimasukkan ke dalam executable.
-Untuk menjalankan aplikasi dan membuka dashboard otomatis, klik
-`start-dashboard.bat`. File `weighing.db` akan dibuat di folder yang sama
-dengan executable, sehingga folder tersebut harus dapat ditulis.
+`dist\Dashboard-Windows.zip`. Ekstrak arsip ke folder yang dapat ditulis, lalu
+jalankan `start-dashboard.vbs` atau `start-dashboard.bat` untuk membuka Control
+Center di browser default tanpa jendela terminal. Tampilan Control Center
+berada di folder `control-center` dan dibuat dengan HTML, CSS, serta JavaScript;
+file-file tersebut ikut disalin ke paket build. `Manager.exe` menjalankan server
+secara tersembunyi. Database `db_marugo.db`, log, pengaturan server, dan file
+antarmuka disimpan di folder paket.
 
 Build membutuhkan koneksi internet satu kali untuk memasang dependency
 packaging serta Git for Windows karena proses `pkg` membutuhkan `patch.exe`.
+Python, Conda, PyInstaller, dan GTK tidak diperlukan.
 Source JavaScript server dan frontend tidak perlu dibagikan untuk menjalankan
 hasil build, tetapi executable tetap dapat dianalisis dengan tool reverse
 engineering; packaging bukan enkripsi.
@@ -76,8 +80,7 @@ engineering; packaging bukan enkripsi.
 
 Build harus dijalankan di Ubuntu/Linux untuk menghasilkan modul SQLite native
 dan executable dengan arsitektur yang sesuai. Pasang Node.js 20+, npm,
-`build-essential`, `python3`, serta GTK 4 dan Python GObject Introspection, lalu
-jalankan:
+`build-essential`, dan Python 3, lalu jalankan:
 
 ```bash
 npm run build:linux
@@ -86,21 +89,17 @@ npm run build:linux
 Skrip memverifikasi modul `better-sqlite3`, mengemas kode server sebagai
 executable, dan membuat arsip portabel, misalnya
 `dist/Dashboard-Ubuntu-amd64.tar.gz`. Ekstrak arsip di Ubuntu, lalu klik kanan
-`launch-linux.sh` dan pilih **Jalankan** untuk membuka aplikasi desktop GTK 4.
-Aplikasi memiliki kolom port, tombol yang berganti antara **Start** dan **Stop**,
-serta terminal log tertanam pada jendela yang sama. Control Center tidak
-dijalankan di browser; browser tidak diperlukan untuk membuka aplikasi desktop.
-Runtime Node.js, source server, dan dependensi aplikasi tidak perlu dipasang di
-komputer pengguna. Ubuntu Desktop umumnya menyediakan GTK 4 dan Python GObject
-Introspection. Jika belum tersedia, pasang dengan
-`sudo apt install python3-gi gir1.2-gtk-4.0`. Paket tersedia untuk arsitektur
-amd64 dan arm64.
+`launch-linux.sh` dan pilih **Jalankan** untuk membuka Control Center di browser
+default. Antarmuka HTML, CSS, dan JavaScript berada di folder `control-center`.
+Browser modern diperlukan; Python dan GTK tidak diperlukan. Runtime Node.js,
+source server, dan dependensi aplikasi tidak perlu dipasang di komputer
+pengguna. Paket tersedia untuk arsitektur amd64 dan arm64.
 
 Database `db_marugo.db`, log `server.log`, pengaturan port, dan status proses
-disimpan di folder aplikasi portabel yang sama. Jendela Control Center terpisah
-dari proses pengelola, jadi tetap berjalan ketika server dihentikan. Membuka
-`launch-linux.sh` kembali menggunakan proses pengelola yang sama. Folder dapat
-dipindah selama tetap memiliki izin tulis.
+disimpan di folder aplikasi portabel yang sama. Control Center dibuka di browser
+terpisah dari proses pengelola, jadi tetap tersedia ketika server dihentikan.
+Membuka `launch-linux.sh` kembali menggunakan proses pengelola yang sama.
+Folder dapat dipindah selama tetap memiliki izin tulis.
 Executable memaketkan kode aplikasi agar tidak dibagikan sebagai file JavaScript
 yang mudah dibaca, tetapi ini bukan enkripsi dan tidak mencegah analisis atau
 modifikasi oleh pihak yang memiliki paket. Untuk kompatibilitas terbaik, buat

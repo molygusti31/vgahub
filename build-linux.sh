@@ -29,12 +29,6 @@ if ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 20 ? 0
   exit 1
 fi
 
-if ! /usr/bin/python3 -c 'import gi; gi.require_version("Gtk", "4.0"); from gi.repository import Gtk' >/dev/null 2>&1; then
-  echo "GTK 4 dan Python GObject Introspection diperlukan untuk build desktop." >&2
-  echo "Pasang dengan: sudo apt install python3-gi gir1.2-gtk-4.0" >&2
-  exit 1
-fi
-
 DEB_ARCH="$(dpkg --print-architecture)"
 case "$DEB_ARCH:$(node -p 'process.arch')" in
   amd64:x64) PKG_ARCH="x64" ;;
@@ -56,8 +50,7 @@ trap 'rm -rf "$APP_DIR"' EXIT
 cp "$SCRIPT_DIR/server_marugo.js" "$SCRIPT_DIR/database_marugo.js" \
   "$SCRIPT_DIR/dashboard-launcher.js" "$SCRIPT_DIR/manager.js" \
   "$SCRIPT_DIR/package.json" "$SCRIPT_DIR/package-lock.json" "$APP_DIR/"
-cp "$SCRIPT_DIR/control_center.py" "$APP_DIR/"
-cp -R "$SCRIPT_DIR/public" "$APP_DIR/"
+cp -R "$SCRIPT_DIR/control-center" "$SCRIPT_DIR/public" "$APP_DIR/"
 npm ci --omit=dev --ignore-scripts=false --prefix "$APP_DIR"
 
 if ! (cd "$APP_DIR" && node -e 'const Database = require("better-sqlite3"); const db = new Database(":memory:"); db.close()'); then
@@ -72,23 +65,22 @@ fi
   --compress Brotli
 
 if [ ! -x "$APP_DIR/Dashboard" ]; then
-  echo "Executable GUI Linux tidak berhasil dibuat." >&2
+  echo "Executable pengelola Linux tidak berhasil dibuat." >&2
   exit 1
 fi
 
 mkdir -p "$PACKAGE_DIR"
+rm -f "$PACKAGE_DIR/control_center.py"
 cp "$APP_DIR/Dashboard" "$SCRIPT_DIR/launch-linux.sh" \
-  "$SCRIPT_DIR/control_center.py" \
   "$PACKAGE_DIR/"
+cp -R "$SCRIPT_DIR/control-center" "$PACKAGE_DIR/"
 cp "$SCRIPT_DIR/public/vgahub.png" "$PACKAGE_DIR/icon.png"
 cat > "$PACKAGE_DIR/README.txt" <<'EOF'
 Dashboard Timbangan untuk Ubuntu/Linux
 
-Jalankan launch-linux.sh untuk membuka aplikasi desktop GTK 4.
-Aplikasi memiliki kolom port, tombol Start/Stop, dan terminal log tertanam.
-GTK 4 dan Python GObject Introspection diperlukan:
-sudo apt install python3-gi gir1.2-gtk-4.0
-Browser tidak diperlukan untuk membuka aplikasi pengelola.
+Jalankan launch-linux.sh untuk membuka Control Center di browser default.
+Antarmuka Control Center dibuat dengan HTML, CSS, dan JavaScript di folder
+control-center. Browser modern diperlukan; Python dan GTK tidak diperlukan.
 Folder ini tidak perlu dipasang dan dapat dipindahkan.
 Port, database, dan log disimpan di folder ini.
 Folder aplikasi harus dapat ditulis.
@@ -113,4 +105,4 @@ tar -C "$OUTPUT_DIR" -czf "$PACKAGE_FILE" \
 
 echo
 echo "Paket portabel selesai: $PACKAGE_FILE"
-echo "Ekstrak arsip, lalu jalankan launch-linux.sh untuk membuka aplikasi desktop."
+echo "Ekstrak arsip, lalu jalankan launch-linux.sh untuk membuka Control Center."
