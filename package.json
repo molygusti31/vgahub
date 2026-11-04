@@ -9,7 +9,7 @@
     "simulate": "node simulator.js",
     "import:materials": "node import-materials.js",
     "dev": "npm start",
-    "build:exe": "pkg . --targets node24.18.1-win-x64 --output dist/Dashboard.exe",
+    "build:exe": "pkg dashboard-launcher.js --targets node24.18.1-win-x64 --output dist/Dashboard.exe",
     "build:linux": "bash build-linux.sh"
   },
   "allowScripts": {
