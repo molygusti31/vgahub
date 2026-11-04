@@ -1,8 +1,0 @@
-name: vgahub-win-gui
-channels:
-  - conda-forge
-dependencies:
-  - python=3.12
-  - pygobject
-  - gtk4
-  - pyinstaller
