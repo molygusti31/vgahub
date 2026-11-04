@@ -1,9 +1,35 @@
 #!/usr/bin/python3
 import json
 import os
+import subprocess
+import sys
+import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+
+APP_DIR = (
+    os.path.dirname(sys.executable)
+    if getattr(sys, "frozen", False)
+    else os.path.dirname(os.path.abspath(__file__))
+)
+DLL_DIRECTORY_HANDLES = []
+
+if os.name == "nt":
+    runtime_bin = os.path.join(APP_DIR, "bin")
+    if os.path.isdir(runtime_bin):
+        os.environ["PATH"] = runtime_bin + os.pathsep + os.environ.get("PATH", "")
+        DLL_DIRECTORY_HANDLES.append(os.add_dll_directory(runtime_bin))
+        os.environ["GTK_EXE_PREFIX"] = APP_DIR
+        os.environ["GTK_DATA_PREFIX"] = APP_DIR
+        os.environ["GI_TYPELIB_PATH"] = os.path.join(
+            APP_DIR, "lib", "girepository-1.0"
+        )
+        os.environ["GTK_PATH"] = os.path.join(APP_DIR, "lib", "gtk-4.0")
+        os.environ["GSETTINGS_SCHEMA_DIR"] = os.path.join(
+            APP_DIR, "share", "glib-2.0", "schemas"
+        )
+        os.environ["XDG_DATA_DIRS"] = os.path.join(APP_DIR, "share")
 
 import gi
 
@@ -12,7 +38,6 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, Gtk
 
 
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
 MANAGER_PORT_FILE = os.path.join(APP_DIR, "manager.port")
 API = None
 WORKERS = ThreadPoolExecutor(max_workers=3)
@@ -428,12 +453,23 @@ class ControlCenter(Gtk.Application):
 def main():
     global API
     try:
-        with open(MANAGER_PORT_FILE, "r", encoding="utf-8") as file:
-            manager_port = int(file.read().strip())
-        if not 1 <= manager_port <= 65535:
-            raise ValueError("Port pengelola tidak valid.")
-    except (OSError, ValueError) as error:
-        print(f"Pengelola dashboard belum berjalan: {error}", file=os.sys.stderr)
+        if os.name == "nt":
+            try:
+                manager_port = get_manager_port()
+            except (OSError, ValueError):
+                manager_port = None
+            if manager_port is None or not manager_is_available(manager_port):
+                manager_port = start_windows_manager()
+        else:
+            manager_port = get_manager_port()
+    except (OSError, ValueError, RuntimeError) as error:
+        message = f"Pengelola dashboard belum berjalan: {error}"
+        if os.name == "nt":
+            import ctypes
+
+            ctypes.windll.user32.MessageBoxW(0, message, "Dashboard Timbangan", 0x10)
+        else:
+            print(message, file=sys.stderr)
         return 1
 
     API = f"http://127.0.0.1:{manager_port}"
@@ -442,6 +478,54 @@ def main():
         return app.run(None)
     finally:
         WORKERS.shutdown(wait=False, cancel_futures=True)
+
+
+def get_manager_port():
+    with open(MANAGER_PORT_FILE, "r", encoding="utf-8") as file:
+        manager_port = int(file.read().strip())
+    if not 1 <= manager_port <= 65535:
+        raise ValueError("Port pengelola tidak valid.")
+    return manager_port
+
+
+def manager_is_available(port):
+    try:
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/api/state", timeout=1
+        ):
+            return True
+    except (OSError, urllib.error.URLError, ValueError):
+        return False
+
+
+def start_windows_manager():
+    manager_executable = os.path.join(APP_DIR, "Dashboard.exe")
+    if not os.path.isfile(manager_executable):
+        raise RuntimeError(f"Executable pengelola tidak ditemukan: {manager_executable}")
+
+    log_path = os.path.join(APP_DIR, "manager.log")
+    with open(log_path, "a", encoding="utf-8") as manager_log:
+        subprocess.Popen(
+            [manager_executable, "--manager"],
+            cwd=APP_DIR,
+            stdin=subprocess.DEVNULL,
+            stdout=manager_log,
+            stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        try:
+            manager_port = get_manager_port()
+        except (OSError, ValueError):
+            time.sleep(0.25)
+            continue
+        if manager_is_available(manager_port):
+            return manager_port
+        time.sleep(0.25)
+
+    raise RuntimeError(f"Pengelola gagal dijalankan. Periksa log: {log_path}")
 
 
 if __name__ == "__main__":
