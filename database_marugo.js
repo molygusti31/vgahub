@@ -1,9 +1,11 @@
 const Database = require("better-sqlite3");
 const path = require("path");
 
-const databasePath = process.pkg
-  ? path.join(path.dirname(process.execPath), "db_marugo.db")
-  : "db_marugo.db";
+const databasePath = process.env.VGAHUB_DATA_DIR
+  ? path.join(process.env.VGAHUB_DATA_DIR, "db_marugo.db")
+  : process.pkg
+    ? path.join(path.dirname(process.execPath), "db_marugo.db")
+    : "db_marugo.db";
 const db = new Database(databasePath);
 db.pragma("foreign_keys = ON");
 db.exec(`

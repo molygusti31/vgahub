@@ -11,6 +11,28 @@ let logOffset = 0;
 let isPollingLogs = false;
 let currentPartialLine = "";
 
+const logsCard = document.querySelector(".logs-card");
+const collapseButton = document.getElementById("collapse-terminal");
+
+collapseButton.addEventListener("click", () => {
+  const isCollapsed = logsCard.classList.toggle("collapsed");
+  const label = isCollapsed ? "Tampilkan terminal" : "Sembunyikan terminal";
+  collapseButton.setAttribute("aria-expanded", String(!isCollapsed));
+  collapseButton.setAttribute("aria-label", label);
+  collapseButton.title = label;
+  requestAnimationFrame(fitDesktopWindow);
+  window.setTimeout(fitDesktopWindow, 350);
+});
+
+const desktopControlBridge = window.desktopControls;
+const fitDesktopWindow = () => {
+  desktopControlBridge?.fitToContent(document.documentElement.scrollHeight);
+};
+const resizeObserver = new ResizeObserver(() => requestAnimationFrame(fitDesktopWindow));
+resizeObserver.observe(document.querySelector("main"));
+window.addEventListener("load", fitDesktopWindow, { once: true });
+requestAnimationFrame(fitDesktopWindow);
+
 async function apiRequest(path, body) {
   const response = await fetch(path, {
     method: body === undefined ? "GET" : "POST",

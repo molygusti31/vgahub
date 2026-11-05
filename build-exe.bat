@@ -2,18 +2,50 @@
 setlocal
 cd /d "%~dp0"
 set "ROOT=%~dp0"
-set "BUILD_ROOT=%TEMP%\vgahub-win-package-%RANDOM%-%RANDOM%"
-set "PACKAGE_DIR=%BUILD_ROOT%\Dashboard-Windows"
-set "PACKAGE_ZIP=%ROOT%dist\Dashboard-Windows.zip"
+set "ELECTRON_OUTPUT=%TEMP%\vgahub-electron-%RANDOM%-%RANDOM%"
 
 if not exist "%ROOT%node_modules\.bin\pkg.cmd" (
-  echo Installing packaging tools and dependencies...
+  echo Installing dependencies...
   call npm install
   if errorlevel 1 (
     echo Failed to install Node.js dependencies.
     pause
     exit /b 1
   )
+)
+
+if not exist "%ROOT%node_modules\.bin\electron-builder.cmd" (
+  echo Installing Electron packaging tools...
+  call npm install
+  if errorlevel 1 (
+    echo Failed to install Electron packaging tools.
+    pause
+    exit /b 1
+  )
+)
+
+for /f %%V in ('node -p "process.versions.modules"') do set "NODE_MODULE_ABI=%%V"
+if not "%NODE_MODULE_ABI%"=="137" (
+  echo.
+  echo Building the embedded server requires Node.js 24.x with ABI 137.
+  pause
+  exit /b 1
+)
+
+if not exist "%ROOT%node_modules\better-sqlite3\build\Release\better_sqlite3.node" (
+  echo Building the native SQLite module required by the embedded server...
+  call npm rebuild better-sqlite3
+  if errorlevel 1 (
+    echo Failed to build the native SQLite module.
+    pause
+    exit /b 1
+  )
+)
+
+if not exist "%ROOT%node_modules\better-sqlite3\build\Release\better_sqlite3.node" (
+  echo The native SQLite module is missing after the rebuild.
+  pause
+  exit /b 1
 )
 
 where patch >nul 2>&1
@@ -28,66 +60,36 @@ if errorlevel 1 (
   exit /b 1
 )
 
+if not exist "%ROOT%build" mkdir "%ROOT%build"
 if not exist "%ROOT%dist" mkdir "%ROOT%dist"
-echo Building Manager.exe with server files embedded...
-call npm run build:exe
+echo Preparing the Windows application icon...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%build-app-icon.ps1" -Source "%ROOT%control-center\vgahub.ico" -Destination "%ROOT%build\vgahub.ico"
 if errorlevel 1 (
-  echo Server executable build failed.
+  echo Failed to prepare the Windows application icon.
   pause
   exit /b 1
 )
 
-mkdir "%PACKAGE_DIR%"
-copy /Y "%ROOT%dist\Manager.exe" "%PACKAGE_DIR%\Manager.exe" >nul
+echo Building the desktop application with embedded server and Control Center...
+call npm run build:exe -- --config.directories.output="%ELECTRON_OUTPUT%"
 if errorlevel 1 (
-  echo Failed to copy Manager.exe into the portable package.
-  pause
-  exit /b 1
-)
-if not exist "%PACKAGE_DIR%\control-center" mkdir "%PACKAGE_DIR%\control-center"
-xcopy /E /I /Y "%ROOT%control-center\*" "%PACKAGE_DIR%\control-center\" >nul
-if errorlevel 1 (
-  echo Failed to copy the HTML Control Center files.
-  pause
-  exit /b 1
-)
-copy /Y "%ROOT%start-dashboard.bat" "%PACKAGE_DIR%\start-dashboard.bat" >nul
-if errorlevel 1 (
-  echo Failed to copy the Windows batch launcher.
-  pause
-  exit /b 1
-)
-copy /Y "%ROOT%start-dashboard.vbs" "%PACKAGE_DIR%\start-dashboard.vbs" >nul
-if errorlevel 1 (
-  echo Failed to copy the Windows GUI launcher.
+  echo Desktop application build failed.
   pause
   exit /b 1
 )
 
-(
-  echo Dashboard Timbangan - Windows x64
-  echo.
-  echo Jalankan start-dashboard.vbs atau start-dashboard.bat untuk membuka Control Center.
-  echo Manager.exe menjalankan server di latar belakang tanpa jendela terminal.
-  echo Tampilan HTML, CSS, dan JavaScript ada di folder control-center.
-  echo Control Center dibuka menggunakan browser default; GTK dan Python tidak diperlukan.
-  echo.
-  echo Port, database, dan log disimpan di folder ini. Pastikan folder dapat ditulis.
-) > "%PACKAGE_DIR%\README.txt"
-
-echo Creating the portable Windows ZIP...
-set "VG_PACKAGE_DIR=%PACKAGE_DIR%"
-set "VG_PACKAGE_ZIP=%PACKAGE_ZIP%"
-powershell -NoProfile -Command "Compress-Archive -Path (Join-Path $env:VG_PACKAGE_DIR '*') -DestinationPath $env:VG_PACKAGE_ZIP -Force"
+copy /Y "%ELECTRON_OUTPUT%\Dashboard-Windows.exe" "%ROOT%dist\Dashboard-Windows.exe" >nul
 if errorlevel 1 (
-  echo Failed to create the portable ZIP package.
+  echo Failed to copy the desktop application into dist.
   pause
   exit /b 1
 )
+del /Q "%ROOT%build\Manager.exe" >nul
+del /Q "%ROOT%build\vgahub.ico" >nul
+rmdir /S /Q "%ELECTRON_OUTPUT%"
 
 echo.
 echo Build complete:
-echo   Portable ZIP: %PACKAGE_ZIP%
-echo Extract the ZIP to a writable folder before running it.
-rmdir /S /Q "%BUILD_ROOT%"
+echo   Desktop application: %ROOT%dist\Dashboard-Windows.exe
+echo Control Center HTML, CSS, and JavaScript are embedded in the application package.
 pause

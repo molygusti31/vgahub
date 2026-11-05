@@ -1,94 +1,147 @@
+<!-- @format -->
+
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#101725">
-    <title>VGAHub | Control Center</title>
-    <link rel="stylesheet" href="/control-center/style.css">
-    <script src="/control-center/app.js" defer></script>
-  </head>
-  <body>
-    <div class="shell">
-      <header class="topbar">
-        <a class="brand" href="#" aria-label="VGAHub Control Center">
-          <span class="brand-mark">V</span>
-          <span>
-            <strong>VGAHub</strong>
-            <small>WEIGHING CONTROL</small>
-          </span>
-        </a>
-        <div class="local-badge"><span></span> SISTEM LOKAL</div>
-      </header>
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1" />
+		<meta
+			name="theme-color"
+			content="#101725" />
+		<title>VGAHub | Control Center</title>
+		<link
+			rel="stylesheet"
+			href="/control-center/style.css" />
+		<script
+			src="/control-center/app.js"
+			defer></script>
+	</head>
+	<body>
+		<div class="shell">
+			<main>
+				<section
+					class="card server-card"
+					aria-labelledby="server-title">
+					<div class="section-heading">
+						<div
+							class="section-icon"
+							aria-hidden="true">
+							▣
+						</div>
+						<div>
+							<h2 id="server-title">Server aplikasi</h2>
+							<!-- <p>Atur koneksi dashboard lokal Anda</p> -->
+						</div>
+						<span
+							class="status-badge"
+							id="server-status"
+							data-status="loading">
+							<span class="status-dot"></span>
+							Menghubungkan
+						</span>
+					</div>
 
-      <main>
-        <section class="intro">
-          <p class="eyebrow">CONTROL CENTER</p>
-          <h1>Dashboard Timbangan</h1>
-          <p class="subtitle">Kelola server dan pantau aktivitas aplikasi dalam satu tempat.</p>
-        </section>
+					<div class="divider"></div>
 
-        <section class="card server-card" aria-labelledby="server-title">
-          <div class="section-heading">
-            <div class="section-icon" aria-hidden="true">▣</div>
-            <div>
-              <h2 id="server-title">Server aplikasi</h2>
-              <p>Atur koneksi dashboard lokal Anda</p>
-            </div>
-            <span class="status-badge" id="server-status" data-status="loading">
-              <span class="status-dot"></span>
-              Menghubungkan
-            </span>
-          </div>
+					<form
+						class="server-controls"
+						id="server-form">
+						<label
+							class="port-field"
+							for="server-port">
+							<span class="field-label">PORT SERVER</span>
+							<input
+								id="server-port"
+								name="port"
+								type="number"
+								min="1"
+								max="65535"
+								value="3000"
+								required />
+							<span class="field-hint">Port lokal antara 1–65535</span>
+						</label>
+						<button
+							class="button button-start"
+							id="toggle-server"
+							type="button"
+							disabled>
+							<span aria-hidden="true">▶</span>
+							<span>Start server</span>
+						</button>
+					</form>
 
-          <div class="divider"></div>
+					<div
+						class="notice"
+						id="notice"
+						role="status"
+						aria-live="polite"></div>
+					<a
+						class="dashboard-link"
+						id="dashboard-link"
+						href="#"
+						target="_blank"
+						rel="noreferrer"
+						hidden>
+						Buka dashboard <span aria-hidden="true">↗</span>
+					</a>
+				</section>
 
-          <form class="server-controls" id="server-form">
-            <label class="port-field" for="server-port">
-              <span class="field-label">PORT SERVER</span>
-              <input id="server-port" name="port" type="number" min="1" max="65535" value="3000" required>
-              <span class="field-hint">Port lokal antara 1–65535</span>
-            </label>
-            <button class="button button-start" id="toggle-server" type="button" disabled>
-              <span aria-hidden="true">▶</span>
-              <span>Start server</span>
-            </button>
-          </form>
+				<section
+					class="card logs-card"
+					aria-labelledby="logs-title">
+					<div class="section-heading logs-heading">
+						<div class="logs-title-row">
+							<button
+								class="collapse-button"
+								id="collapse-terminal"
+								type="button"
+								aria-label="Sembunyikan terminal"
+								aria-expanded="true"
+								title="Sembunyikan terminal">
+								<span
+									class="arrow-icon"
+									aria-hidden="true">🔻</span>
+							</button>
+							<h2 id="logs-title">Aktivitas server</h2>
+						</div>
+						<span class="live-badge"><span></span> LIVE</span>
+					</div>
 
-          <div class="notice" id="notice" role="status" aria-live="polite"></div>
-          <a class="dashboard-link" id="dashboard-link" href="#" target="_blank" rel="noreferrer" hidden>
-            Buka dashboard <span aria-hidden="true">↗</span>
-          </a>
-        </section>
+					<div class="logs-content">
+						<div class="terminal">
+							<div class="terminal-toolbar">
+								<div
+									class="window-dots"
+									aria-hidden="true">
+									<i></i><i></i><i></i>
+								</div>
+								<span>dashboard-server &nbsp; ~/weighing-app</span>
+								<button
+									class="clear-button"
+									id="clear-logs"
+									type="button">
+									Bersihkan
+								</button>
+							</div>
+							<pre
+								class="terminal-output"
+								id="terminal-output"
+								aria-label="Log server"
+								aria-live="polite">Menghubungkan ke pengelola...</pre>
+						</div>
+						<div class="logs-footer">
+							<span><i></i> Terminal terhubung</span>
+							<span class="session-label">LOCAL SESSION</span>
+						</div>
+					</div>
+				</section>
 
-        <section class="card logs-card" aria-labelledby="logs-title">
-          <div class="section-heading logs-heading">
-            <div>
-              <h2 id="logs-title">Aktivitas server</h2>
-              <p>Output server secara langsung</p>
-            </div>
-            <span class="live-badge"><span></span> LIVE</span>
-          </div>
-
-          <div class="terminal">
-            <div class="terminal-toolbar">
-              <div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-              <span>dashboard-server &nbsp; ~/weighing-app</span>
-              <button class="clear-button" id="clear-logs" type="button">Bersihkan</button>
-            </div>
-            <pre class="terminal-output" id="terminal-output" aria-label="Log server" aria-live="polite">Menghubungkan ke pengelola...</pre>
-          </div>
-          <div class="logs-footer">
-            <span><i></i> Terminal terhubung</span>
-            <span class="session-label">LOCAL SESSION</span>
-          </div>
-        </section>
-
-        <footer class="footer">
-          <span>VGAHub / Weighing Scale Dashboard</span>
-          <span>RUNS LOCALLY ON YOUR DEVICE</span>
-        </footer>
-      </main>
-    </div>
-  </body>
+				<footer class="footer">
+					<p>VGA SCALE INDONEISA | VGAhub @RnD</p>
+				</footer>
+			</main>
+		</div>
+	</body>
 </html>

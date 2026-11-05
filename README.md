@@ -61,20 +61,22 @@ Server akan berjalan di `http://localhost:3000`
 ### 6. Buat Aplikasi Windows (.exe)
 
 Klik dua kali `build-exe.bat`. Setelah selesai, aplikasi tersedia sebagai
-`dist\Dashboard-Windows.zip`. Ekstrak arsip ke folder yang dapat ditulis, lalu
-jalankan `start-dashboard.vbs` atau `start-dashboard.bat` untuk membuka Control
-Center di browser default tanpa jendela terminal. Tampilan Control Center
-berada di folder `control-center` dan dibuat dengan HTML, CSS, serta JavaScript;
-file-file tersebut ikut disalin ke paket build. `Manager.exe` menjalankan server
-secara tersembunyi. Database `db_marugo.db`, log, pengaturan server, dan file
-antarmuka disimpan di folder paket.
+`dist\Dashboard-Windows.exe`. Jalankan executable tersebut untuk membuka
+Control Center sebagai aplikasi desktop; browser tidak digunakan untuk
+menampilkan Control Center. HTML, CSS, dan JavaScript Control Center disematkan
+di executable server dan tidak tersedia sebagai file terpisah dalam paket.
+Ikon aplikasi menggunakan `control-center\vgahub.ico`, dan tinggi jendela
+menyesuaikan saat panel aktivitas ditutup atau dibuka.
+Database, log, serta pengaturan server disimpan di direktori data pengguna
+Windows.
 
-Build membutuhkan koneksi internet satu kali untuk memasang dependency
+Build membutuhkan koneksi internet untuk memasang Electron dan dependency
 packaging serta Git for Windows karena proses `pkg` membutuhkan `patch.exe`.
 Python, Conda, PyInstaller, dan GTK tidak diperlukan.
 Source JavaScript server dan frontend tidak perlu dibagikan untuk menjalankan
 hasil build, tetapi executable tetap dapat dianalisis dengan tool reverse
-engineering; packaging bukan enkripsi.
+engineering; packaging bukan enkripsi dan tidak mencegah analisis atau
+modifikasi oleh pihak yang memiliki executable.
 
 ### 7. Build aplikasi portabel untuk Ubuntu/Linux
 

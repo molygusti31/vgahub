@@ -4,7 +4,9 @@ const net = require("net");
 const path = require("path");
 const { spawn } = require("child_process");
 
-const APP_DIR = process.pkg ? path.dirname(process.execPath) : __dirname;
+const APP_DIR = path.resolve(
+  process.env.VGAHUB_DATA_DIR || (process.pkg ? path.dirname(process.execPath) : __dirname),
+);
 const PORT_FILE = path.join(APP_DIR, "port.conf");
 const PID_FILE = path.join(APP_DIR, "manager.pid");
 const MANAGER_PORT_FILE = path.join(APP_DIR, "manager.port");
@@ -25,6 +27,14 @@ let logStartOffset = 0;
 let partialLogLine = "";
 let logLines = [];
 let logFileSize = 0;
+
+fs.mkdirSync(APP_DIR, { recursive: true });
+if (process.pkg) {
+  const databasePath = path.join(APP_DIR, "db_marugo.db");
+  if (!fs.existsSync(databasePath)) {
+    fs.writeFileSync(databasePath, fs.readFileSync(path.join(__dirname, "db_marugo.db")));
+  }
+}
 
 function appendLog(text, persist = false) {
   if (persist) {
@@ -161,7 +171,11 @@ async function handleRequest(request, response) {
   if (request.method === "GET" && controlCenterFile) {
     try {
       const contents = fs.readFileSync(
-        path.join(APP_DIR, "control-center", controlCenterFile[0]),
+        path.join(
+          process.pkg ? __dirname : APP_DIR,
+          "control-center",
+          controlCenterFile[0],
+        ),
       );
       response.writeHead(200, {
         "Content-Type": controlCenterFile[1],

@@ -9,7 +9,7 @@
     "simulate": "node simulator.js",
     "import:materials": "node import-materials.js",
     "dev": "npm start",
-    "build:exe": "pkg dashboard-launcher.js --targets node24.18.1-win-x64 --output dist/Manager.exe",
+    "build:exe": "pkg dashboard-launcher.js --targets node24.18.1-win-x64 --output build/Manager.exe && electron-builder --win portable --x64",
     "build:linux": "bash build-linux.sh"
   },
   "allowScripts": {
@@ -37,7 +37,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@yao-pkg/pkg": "^6.5.1"
+    "@yao-pkg/pkg": "^6.5.1",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
   },
   "pkg": {
     "scripts": [
@@ -50,8 +52,43 @@
     ],
     "assets": [
       "public/**/*",
+      "control-center/**/*",
+      "db_marugo.db",
       "node_modules/better-sqlite3/build/Release/*.node"
     ],
-    "outputPath": "dist"
+    "outputPath": "build"
+  },
+  "build": {
+    "appId": "com.vgahub.dashboard",
+    "productName": "VGAHub Dashboard",
+    "asar": true,
+    "directories": {
+      "output": "build/electron-dist"
+    },
+    "files": [
+      "electron-main.js",
+      "electron-preload.js",
+      "package.json",
+      "control-center/vgahub.ico",
+      "!node_modules/**"
+    ],
+    "extraMetadata": {
+      "main": "electron-main.js",
+      "dependencies": {}
+    },
+    "npmRebuild": false,
+    "extraResources": [
+      {
+        "from": "build/Manager.exe",
+        "to": "Manager.exe"
+      }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "build/vgahub.ico"
+    },
+    "portable": {
+      "artifactName": "Dashboard-Windows.exe"
+    }
   }
 }
